@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h" /* http://nothings.org/stb/stb_image_write.h */
@@ -11,6 +12,8 @@
 #include "stb_truetype.h" /* http://nothings.org/stb/stb_truetype.h */
 
 #include "dirent.h"
+
+#include "SerialPort.h"
 
 void writeText(const char* font, const char* file, const char* word) {
 
@@ -136,7 +139,34 @@ void doGcode(const std::string& name) {
 	system(gcode.c_str());
 }
 
+void sendGcode(const std::string& name, const std::string& port) {
+	
+
+	//String for incoming data
+	char incomingData[MAX_DATA_LENGTH];
+
+	SerialPort cnc(port.c_str());
+	if (cnc.isConnected()) std::cout << "Connection Established" << std::endl;
+	else std::cout << "ERROR, check port name";
+	std::ifstream file(name + ".gcode");
+	std::string line;
+
+	while (cnc.isConnected() && std::getline(file, line)) {
+		cnc.writeSerialPort(line.c_str(), line.size()); //Write on line of gcode
+		//Check if data has been read or not
+		int read_result = cnc.readSerialPort(incomingData, MAX_DATA_LENGTH);
+
+		if (strcmp(incomingData, "OK") == 0) {
+			puts(incomingData);
+		}
+		Sleep(10);
+	}
+
+}
+
 int main(int argc, const char * argv[]) {
+	
+
 	std::vector<std::string> fonts;
 	
 	getFonts(fonts);
@@ -152,12 +182,22 @@ int main(int argc, const char * argv[]) {
 	std::string fontname = "";
 	fontname += fonts[rand() % fonts.size()];
 
-	writeText(fontname.c_str(), str2, str);
+	writeText(fontname.c_str(), str2, str); //Create a file
 
-	doTrace(std::string(str2));
+	doTrace(std::string(str2)); //Convert bmp to svg
 
-	doGcode(std::string(str2));
+	doGcode(std::string(str2)); //Convert svg to gcode
 
+	std::vector<std::string> ports;
+	SerialPort::GetPortNames(ports); //Enumerate ports.
 
-	return 0;
+	if (ports.size() != 1) {
+		std::cout << "Problem with ports. Spesify one.";
+		std::cin.get();
+		return EXIT_FAILURE;
+	}
+
+	sendGcode(str2, ports[0]);
+
+	return EXIT_SUCCESS;
 }

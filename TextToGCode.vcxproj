@@ -129,10 +129,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\SerialPort.cpp" />
     <ClCompile Include="TextToGCode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\dirent.h" />
+    <ClInclude Include="include\SerialPort.h" />
     <ClInclude Include="include\stb_image_write.h" />
     <ClInclude Include="include\stb_truetype.h" />
   </ItemGroup>
