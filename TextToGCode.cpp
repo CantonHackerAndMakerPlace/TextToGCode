@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <map>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h" /* http://nothings.org/stb/stb_image_write.h */
@@ -164,29 +165,82 @@ void sendGcode(const std::string& name, const std::string& port) {
 
 }
 
-int main(int argc, const char * argv[]) {
-	
-
-	std::vector<std::string> fonts;
-	
-	getFonts(fonts);
-
-	char str[100];
-	std::cout << "Input text:";
-	std::cin.getline(str, 100);
-
+void getFilename(std::string& filename) {
 	char str2[100];
 	std::cout << "Filename:";
 	std::cin.getline(str2, 100);
+}
 
-	std::string fontname = "";
-	fontname += fonts[rand() % fonts.size()];
+void getText(std::string& test) {
+	char str[100];
+	std::cout << "Input text:";
+	std::cin.getline(str, 100);
+	test = str;
+}
 
-	writeText(fontname.c_str(), str2, str); //Create a file
+void getRandomFont(std::string& font) {
+	std::vector<std::string> fonts;
+	getFonts(fonts);
 
-	doTrace(std::string(str2)); //Convert bmp to svg
+	font += fonts[rand() % fonts.size()];
+}
 
-	doGcode(std::string(str2)); //Convert svg to gcode
+int main(int argc, const char * argv[]) {
+	std::map<std::string, std::string> lineargs;
+	for (int i = 0; i < argc; i++) {
+		switch (i)
+		{
+		case 0: //Name of exe. Not really usefull.
+
+			break;
+		default:
+			std::string linearg(argv[i]);
+			if (linearg[0] == '-') { //Is command.
+				if (i + 1 != argc) {
+					std::string linearg2(argv[i + 1]);
+					if (linearg2[0] == '-') { //Is command.
+						lineargs[linearg.substr(1)] = "1";
+					}
+					else {
+						lineargs[linearg.substr(1)] = linearg2;
+						i++;
+					}
+				}
+				else
+				{
+					lineargs[linearg.substr(1)] = "1";
+				}
+			}
+			break;
+		}
+	}
+
+	std::string config = lineargs["config"];
+	std::string filename = lineargs["filename"];
+	std::string text = lineargs["text"];
+	std::string fontname = lineargs["font"];
+
+	if (config.size() == 0) {
+		//TODO: Load config for gcode
+	}
+
+	if (filename.size() == 0) {
+		filename = "test";
+	}
+
+	if (text.size() == 0) {
+		getText(text);
+	}
+
+	if (fontname.size() == 0) {
+		getRandomFont(fontname);
+	}
+
+	writeText(fontname.c_str(), filename.c_str(), text.c_str()); //Create a file
+
+	doTrace(filename); //Convert bmp to svg
+
+	doGcode(filename); //Convert svg to gcode
 
 	std::vector<std::string> ports;
 	SerialPort::GetPortNames(ports); //Enumerate ports.
@@ -197,7 +251,7 @@ int main(int argc, const char * argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	sendGcode(str2, ports[0]);
+	sendGcode(filename, ports[0]);
 
 	return EXIT_SUCCESS;
 }
