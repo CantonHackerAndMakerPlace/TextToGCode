@@ -219,6 +219,7 @@ int main(int argc, const char * argv[]) {
 	std::string filename = lineargs["filename"];
 	std::string text = lineargs["text"];
 	std::string fontname = lineargs["font"];
+	std::string port = lineargs["port"];
 
 	if (config.size() == 0) {
 		//TODO: Load config for gcode
@@ -236,22 +237,24 @@ int main(int argc, const char * argv[]) {
 		getRandomFont(fontname);
 	}
 
+	if (port.size() == 0) {
+		std::vector<std::string> ports;
+		SerialPort::GetPortNames(ports); //Enumerate ports.
+
+		if (ports.size() != 1) {
+			std::cout << "Problem with ports. Spesify one.";
+			std::cin.get();
+			return EXIT_FAILURE;
+		}
+	}
+
 	writeText(fontname.c_str(), filename.c_str(), text.c_str()); //Create a file
 
 	doTrace(filename); //Convert bmp to svg
 
 	doGcode(filename); //Convert svg to gcode
 
-	std::vector<std::string> ports;
-	SerialPort::GetPortNames(ports); //Enumerate ports.
-
-	if (ports.size() != 1) {
-		std::cout << "Problem with ports. Spesify one.";
-		std::cin.get();
-		return EXIT_FAILURE;
-	}
-
-	sendGcode(filename, ports[0]);
+	sendGcode(filename, port);
 
 	return EXIT_SUCCESS;
 }
