@@ -12,9 +12,13 @@
 #define STB_TRUETYPE_IMPLEMENTATION 
 #include "stb_truetype.h" /* http://nothings.org/stb/stb_truetype.h */
 
-#include "dirent.h"
+#include "dirent.h" /* https://github.com/tronkko/dirent */
 
 #include "SerialPort.h"
+
+/*Potrace: http://potrace.sourceforge.net/ */
+
+/* Juicy Gcode: https://hackage.haskell.org/package/juicy-gcode */
 
 void writeText(const char* font, const char* file, const char* word) {
 
@@ -44,7 +48,7 @@ void writeText(const char* font, const char* file, const char* word) {
 	int b_w = strlen(word) * 64; /* bitmap width */
 	int b_h = 64; /* bitmap height */
 
-				  /* create a bitmap for the phrase */
+	/* create a bitmap for the phrase */
 	unsigned char* bitmap = (unsigned char*)malloc(b_w * b_h);
 
 	/* Make it black*/
@@ -101,7 +105,7 @@ void getFonts(std::vector<std::string>& fonts) {
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir("fonts")) != NULL) {
-		/* print all the files and directories within directory */
+		/* print all the files within directory */
 		while ((ent = readdir(dir)) != NULL) {
 			std::string name = "fonts/";
 			switch (ent->d_type)
@@ -142,8 +146,6 @@ void doGcode(const std::string& name) {
 
 void sendGcode(const std::string& name, const std::string& port) {
 	
-
-	//String for incoming data
 	char incomingData[MAX_DATA_LENGTH];
 
 	SerialPort cnc(port.c_str());
@@ -188,8 +190,7 @@ void getRandomFont(std::string& font) {
 int main(int argc, const char * argv[]) {
 	std::map<std::string, std::string> lineargs;
 	for (int i = 0; i < argc; i++) {
-		switch (i)
-		{
+		switch (i){
 		case 0: //Name of exe. Not really usefull.
 
 			break;
@@ -206,8 +207,7 @@ int main(int argc, const char * argv[]) {
 						i++;
 					}
 				}
-				else
-				{
+				else{
 					lineargs[linearg.substr(1)] = "1";
 				}
 			}
@@ -254,7 +254,7 @@ int main(int argc, const char * argv[]) {
 
 	doGcode(filename); //Convert svg to gcode
 
-	sendGcode(filename, port);
+	sendGcode(filename, port); //Send data.
 
 	return EXIT_SUCCESS;
 }
